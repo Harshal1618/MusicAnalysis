@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jun 19 22:54:04 2018
+
+@author: harshal
+"""
+
+
+
+## read a musical note
+import wave
+import numpy as np
+from scipy.io import wavfile
+from scipy.fftpack import fft
+import matplotlib.pyplot as plt
+file = wave.open('/Volumes/DataSci/Data/HSCode/MusicAnalysis/Flute.nonvib.ff.B4.stereo.wav')
+nchannel = file.getnchannels()
+framerate = file.getframerate()
+nframes = file.getnframes()
+file.close()
+fs, data = wavfile.read('/Volumes/DataSci/Data/HSCode/MusicAnalysis/Flute.nonvib.ff.B4.stereo.wav') # load the data
+a = data.T[1] # this is a two channel soundtrack, I get the first track
+b=[(ele/2**8.)*2-1 for ele in a] # this is 8-bit track, b is now normalized on [-1,1)
+y = fft(b) # calculate fourier transform (complex numbers list)
+
+xf = np.linspace(0,int(framerate/2.0),int((framerate/2.0))+1)
+yf = np.abs(y[:int((framerate//2.0))+1])
+
+plt.plot(xf,yf)
+
+yf_top5 = np.argsort(yf)[-5:][::-1]
+xf[yf_top5]
+
+
