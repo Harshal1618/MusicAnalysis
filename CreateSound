@@ -7,19 +7,26 @@ Created on Wed Jun 20 18:34:55 2018
 """
 
 # Create sound from frequency
-import matplotlib.pyplot as plt
-from scipy.fftpack import fft
+
 from scipy.io import wavfile # get the api
 import numpy as np
 
-framerate = 44100
+i_framerate=44100
 
+def createSoundData(a_freq, a_amp, i_framerate=44100, i_time = 1, f_amp = 1000.0):
+    
+    n_samples = i_time * i_framerate
+    
+    x = np.linspace(0,i_time, n_samples)
+    y = np.zeros(n_samples)
+    for i in range(len(a_freq)):
+        y += np.sin(2 * np.pi * a_freq[i] * x)* f_amp * a_amp[i]
+    data2 = np.c_[y,y] # 2 Channel sound
+    return data2
+    
+freq = np.array([526.5, 263.25, 791.75, 527.25, 525.25, 527.75, 527., 792., 790., 788.5 ])
+amp = np.array([ 1., 0.90907803,  0.84556906,  0.82360405,  0.78603716,  0.77156231,
+                0.74690602,  0.73300262,  0.72706691,  0.7102042 ])
 
-t_sample = 1.0 / framerate
-time = 3
-n_samples = time * framerate
-
-x = np.linspace(0,n_samples -1, n_samples)
-y = np.sin(2*np.pi*1200*x)*10000
-data2 = np.c_[y,y]
-wavfile.write('createsound_amp10000.wav',framerate,data2)
+soundData = createSoundData(freq, amp, f_amp = 1)
+wavfile.write('createsound_A4_v2.wav',i_framerate,soundData)

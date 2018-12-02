@@ -1,0 +1,99 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jun 20 18:46:52 2018
+
+@author: harshal
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.io import wavfile
+from scipy.fftpack import fft
+
+
+def createSoundData(a_freq, a_amp, a_phase, i_framerate=44100, i_time = 1, f_amp = 1000.0):
+    n_samples = i_time * i_framerate
+    
+    x = np.linspace(0,i_time, n_samples)
+    y = np.zeros(n_samples)
+    for i in range(len(a_freq)):
+        y += np.sin(2 * np.pi * a_freq[i] * x + a_phase[i])* f_amp * a_amp[i]
+    data2 = np.c_[y,y] # 2 Channel sound
+    return data2
+
+def findFrequencies(arr_data, i_framerate = 44100, i_top_n =5):
+    a = arr_data.T[0] # this is a two channel soundtrack, I get the first track
+#    b=[(ele/2**8.)*2-1 for ele in a] # this is 8-bit track, b is now normalized on [-1,1)
+    y = fft(a) # calculate fourier transform (complex numbers list)
+    
+    xf = np.linspace(0,int(i_framerate/2.0),int((i_framerate/2.0))+1) #/2 # Need to find out this last /2 part
+    yf = y[:int((i_framerate//2.0))+1]
+    
+#    plt.plot(xf,np.abs(yf))
+    
+    yf_top_n = np.argsort(np.abs(yf))[-i_top_n:][::-1]
+    amp_top_n =  np.abs(yf)[yf_top_n] / np.max(np.abs(yf)[yf_top_n])
+    freq_top_n = xf[yf_top_n]
+    phase_top_n = np.angle(yf)[yf_top_n]
+    
+    return freq_top_n, amp_top_n, phase_top_n
+
+
+freq1 = 10
+freq2 = 7
+phase1 = 0
+phase2 = np.pi * 30/ 180
+
+i_sample = 44100
+time = 1  ## Do not change w/o chanhin samples
+
+
+f = np.array([freq1,freq2])
+amp = np.array([1.0, 1.0])
+phase = np.array([phase1, phase2])
+
+x = np.linspace(0,i_sample-1,i_sample)
+y = np.sin(2*np.pi*x *freq1 / i_sample + phase1) + np.sin(2*np.pi*x *freq2 / i_sample + phase2)
+
+plt.plot(x,y)
+
+soundData = createSoundData(f, amp, phase,i_time = 1, f_amp = 2 / len(f))
+wavfile.write('createsound_Try_20180621_v4.wav',i_sample,soundData)
+
+fs, data = wavfile.read('./createsound_Try_20180621_v4.wav')
+top_freq , top_freq_amp, top_freq_phase = findFrequencies(data, i_framerate = 44100 , i_top_n = 5)
+
+print('Frequencies: ',top_freq)
+print('Amplitudes : ',top_freq_amp) 
+print('Phase :' , top_freq_phase)
+
+x = np.linspace(0,i_sample-1,i_sample)
+y = (np.sin(2*np.pi*x *top_freq[0] / i_sample + top_freq_phase[0]) + \
+     np.sin(2*np.pi*x *top_freq[1] / i_sample + top_freq_phase[1]))
+
+plt.plot(x,y)
+
+
+
+#####################################
+# TRY 2
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+num_t = 100000
+t = np.linspace(0,1,num_t)
+dt = 1.0/num_t
+w = 2.0*np.pi*30.0
+phase = np.pi/2.0
+
+amp = np.fft.rfft(np.cos(w*t+phase))
+freqs = np.fft.rfftfreq(t.shape[-1],dt)
+
+print (np.arctan2(amp.imag,amp.real))[30]
+
+plt.subplot(211)
+plt.plot(freqs[:60],np.sqrt(amp.real**2+amp.imag**2)[:60])
+plt.subplot(212)
+plt.plot(freqs[:60],(np.arctan2(amp.imag,amp.real))[:60])
+plt.show()
